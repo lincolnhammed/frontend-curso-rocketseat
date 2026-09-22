@@ -1,16 +1,100 @@
-# React + Vite
+# Todo List - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend desenvolvido em React para complementar a aplicação Todo List desenvolvida em Java e Spring Boot.
 
-Currently, two official plugins are available:
+O principal objetivo deste projeto é demonstrar a integração entre uma API REST backend e uma interface web.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Tecnologias
 
-## React Compiler
+- React
+- JavaScript
+- Vite
+- React Router
+- Axios
+- HTML
+- CSS
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Funcionalidades
 
-## Expanding the Oxlint configuration
+- Cadastro de usuário
+- Login
+- Criação de tarefas
+- Listagem de tarefas
+- Atualização de tarefas
+- Logout
+- Integração com a API REST
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Integração com o Backend
+
+O frontend consome a API REST desenvolvida com Java e Spring Boot através do Axios.
+
+### Backend
+
+```text
+https://curso-rocketseat.onrender.com
+```
+
+### Frontend
+
+```text
+https://frontend-curso-rocketseat.onrender.com
+```
+
+Em ambiente local, o frontend utiliza o backend:
+
+```text
+http://localhost:8080
+```
+
+## Rotas
+
+```text
+/           → Página inicial
+/login      → Login
+/cadastro   → Cadastro
+/tasks      → Tarefas
+```
+
+## Estrutura
+
+```text
+src/
+├── pages/
+│   ├── Home.jsx
+│   ├── Login.jsx
+│   ├── Cadastro.jsx
+│   └── Tasks.jsx
+│
+├── services/
+│   └── api.js
+│
+├── App.jsx
+├── main.jsx
+└── index.css
+```
+
+## Como executar
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+Execute o projeto:
+
+```bash
+npm run dev
+```
+
+O frontend será disponibilizado pelo Vite, normalmente em:
+
+```text
+http://localhost:5173
+```
+
+## Objetivo
+
+Este frontend foi desenvolvido como complemento da API backend, permitindo demonstrar na prática a comunicação entre uma aplicação React e uma API REST desenvolvida com Java e Spring Boot.
+
+O foco principal do projeto está no desenvolvimento backend.
