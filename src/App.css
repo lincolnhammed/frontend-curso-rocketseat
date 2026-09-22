@@ -1,0 +1,20 @@
+.alert {
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.alert.success {
+  background-color: rgba(4, 211, 97, 0.1);
+  border: 1px solid #04d361;
+  color: #04d361;
+}
+
+.alert.error {
+  background-color: rgba(247, 90, 104, 0.1);
+  border: 1px solid #f75a68;
+  color: #f75a68;
+}
