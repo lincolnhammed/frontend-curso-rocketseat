@@ -20,7 +20,9 @@ export default function Tasks() {
     const [novaTask, setNovaTask] = useState({
         titulo: '',
         descricao: '',
-        prioridade: ''
+        prioridade: '',
+        startAt: '',
+        endAt: ''
     });
 
     // ============================================================
@@ -35,30 +37,35 @@ export default function Tasks() {
     const [taskEditada, setTaskEditada] = useState({
         titulo: '',
         descricao: '',
-        prioridade: ''
+        prioridade: '',
+        startAt: '',
+        endAt: ''
     });
 
     // ============================================================
-    // CARREGAR PÁGINA
+    // CARREGAR A PÁGINA
     // ============================================================
 
-    // Quando a página abre, verificamos se existe um usuário logado.
+    // Executa quando a página /tasks é aberta.
     useEffect(() => {
+        // Pegamos o usuário que foi salvo no sessionStorage
+        // durante o login/cadastro.
         const usuarioSalvo = sessionStorage.getItem('usuario');
 
-        // Se não existe usuário salvo, mandamos para o login.
+        // Se não existe usuário, voltamos para o login.
         if (!usuarioSalvo) {
             navigate('/login');
             return;
         }
 
-        // Transformamos o texto do sessionStorage novamente em objeto.
+        // O sessionStorage guarda texto.
+        // JSON.parse transforma esse texto novamente em objeto.
         const usuarioObjeto = JSON.parse(usuarioSalvo);
 
         setUsuario(usuarioObjeto);
 
-        // Depois de saber quem está logado,
-        // buscamos as tarefas.
+        // Depois de confirmar o usuário,
+        // buscamos as tarefas dele.
         handleListTasks();
     }, []);
 
@@ -66,11 +73,13 @@ export default function Tasks() {
     // LISTAR TAREFAS
     // ============================================================
 
-    // Busca as tarefas no backend.
+    // Busca as tarefas do usuário no backend.
     async function handleListTasks() {
         try {
             const usuarioSalvo = sessionStorage.getItem('usuario');
 
+            // Se o usuário não estiver mais salvo,
+            // voltamos para o login.
             if (!usuarioSalvo) {
                 navigate('/login');
                 return;
@@ -78,6 +87,10 @@ export default function Tasks() {
 
             const usuarioObjeto = JSON.parse(usuarioSalvo);
 
+            // GET /tasks/lista
+            //
+            // O username e password são enviados
+            // através da autenticação Basic Auth.
             const response = await api.get('/tasks/lista', {
                 auth: {
                     username: usuarioObjeto.username,
@@ -85,13 +98,14 @@ export default function Tasks() {
                 }
             });
 
-            // Quando não existem tarefas,
-            // o backend retorna 204.
+            // Se o backend retornar 204,
+            // significa que não existem tarefas.
             if (response.status === 204) {
                 setTasks([]);
                 return;
             }
 
+            // Guarda as tarefas recebidas do backend.
             setTasks(response.data);
 
         } catch (error) {
@@ -103,11 +117,15 @@ export default function Tasks() {
     // CRIAR TAREFA
     // ============================================================
 
-    // Atualiza os campos da nova tarefa
-    // conforme o usuário vai digitando.
+    // Atualiza o estado conforme o usuário digita
+    // nos campos da nova tarefa.
     function handleNovaTaskChange(event) {
         const { name, value } = event.target;
 
+        // O operador ... copia os dados que já existem.
+        //
+        // [name]: value altera somente o campo
+        // que foi modificado.
         setNovaTask({
             ...novaTask,
             [name]: value
@@ -117,13 +135,14 @@ export default function Tasks() {
     // Envia a nova tarefa para o backend.
     async function handleCriarTask(event) {
 
-        // Impede que o navegador recarregue a página
+        // Impede o navegador de recarregar a página
         // quando o formulário for enviado.
         event.preventDefault();
 
         try {
             const usuarioSalvo = sessionStorage.getItem('usuario');
 
+            // Verifica novamente se o usuário está logado.
             if (!usuarioSalvo) {
                 navigate('/login');
                 return;
@@ -131,17 +150,24 @@ export default function Tasks() {
 
             const usuarioObjeto = JSON.parse(usuarioSalvo);
 
-            // Fazemos um POST para criar a tarefa.
+            // POST /tasks/
             //
-            // O objeto novaTask vai no corpo da requisição.
+            // Aqui enviamos os dados da nova tarefa
+            // para o nosso controller Spring Boot.
             await api.post(
                 '/tasks/',
                 {
                     titulo: novaTask.titulo,
                     descricao: novaTask.descricao,
-                    priority: novaTask.prioridade
+                    priority: novaTask.prioridade,
+
+                    // datetime-local já produz um formato
+                    // compatível com LocalDateTime do Java.
+                    startAt: novaTask.startAt,
+                    endAt: novaTask.endAt
                 },
                 {
+                    // Autenticação Basic Auth.
                     auth: {
                         username: usuarioObjeto.username,
                         password: usuarioObjeto.password
@@ -150,11 +176,13 @@ export default function Tasks() {
             );
 
             // Depois de criar a tarefa,
-            // limpamos os campos do formulário.
+            // limpamos o formulário.
             setNovaTask({
                 titulo: '',
                 descricao: '',
-                prioridade: ''
+                prioridade: '',
+                startAt: '',
+                endAt: ''
             });
 
             // Buscamos novamente as tarefas
@@ -164,6 +192,8 @@ export default function Tasks() {
         } catch (error) {
             console.error('Erro ao criar tarefa:', error);
 
+            // Se o backend enviou uma resposta de erro,
+            // mostramos essa resposta no console.
             if (error.response) {
                 console.error(
                     'Resposta do servidor:',
@@ -178,14 +208,16 @@ export default function Tasks() {
     // ============================================================
 
     // Quando clicamos em "Editar",
-    // colocamos a tarefa no formulário.
+    // colocamos os dados da tarefa no formulário.
     function handleEditar(task) {
         setEditandoId(task.id);
 
         setTaskEditada({
             titulo: task.titulo || '',
             descricao: task.descricao || '',
-            prioridade: task.priority || ''
+            prioridade: task.priority || '',
+            startAt: task.startAt || '',
+            endAt: task.endAt || ''
         });
     }
 
@@ -204,11 +236,13 @@ export default function Tasks() {
     // SALVAR EDIÇÃO
     // ============================================================
 
-    // Envia a alteração para o Spring Boot.
+    // Envia as alterações para o Spring Boot.
     async function handleSalvar() {
         try {
             const usuarioSalvo = sessionStorage.getItem('usuario');
 
+            // Se o usuário não estiver logado,
+            // voltamos para o login.
             if (!usuarioSalvo) {
                 navigate('/login');
                 return;
@@ -216,19 +250,21 @@ export default function Tasks() {
 
             const usuarioObjeto = JSON.parse(usuarioSalvo);
 
-            // Aqui está o nosso PUT.
+            // PUT /tasks/{id}
             //
-            // O ID vai para:
-            // @PutMapping("/{id}")
+            // O ID da tarefa vai para:
+            // @PathVariable UUID id
             //
-            // E taskEditada vai no:
-            // @RequestBody
+            // Os dados vão para:
+            // @RequestBody TaskModel taskModel
             await api.put(
                 `/tasks/${editandoId}`,
                 {
                     titulo: taskEditada.titulo,
                     descricao: taskEditada.descricao,
-                    priority: taskEditada.prioridade
+                    priority: taskEditada.prioridade,
+                    startAt: taskEditada.startAt,
+                    endAt: taskEditada.endAt
                 },
                 {
                     auth: {
@@ -238,17 +274,19 @@ export default function Tasks() {
                 }
             );
 
-            // Depois de salvar, saímos do modo de edição.
+            // Sai do modo de edição.
             setEditandoId(null);
 
-            // Limpamos o formulário.
+            // Limpa o formulário de edição.
             setTaskEditada({
                 titulo: '',
                 descricao: '',
-                prioridade: ''
+                prioridade: '',
+                startAt: '',
+                endAt: ''
             });
 
-            // Buscamos novamente as tarefas
+            // Busca novamente as tarefas
             // para mostrar os dados atualizados.
             handleListTasks();
 
@@ -268,14 +306,17 @@ export default function Tasks() {
     // CANCELAR EDIÇÃO
     // ============================================================
 
-    // Cancela a edição sem enviar nada para o backend.
     function handleCancelar() {
+        // Sai do modo de edição.
         setEditandoId(null);
 
+        // Limpa os campos.
         setTaskEditada({
             titulo: '',
             descricao: '',
-            prioridade: ''
+            prioridade: '',
+            startAt: '',
+            endAt: ''
         });
     }
 
@@ -283,10 +324,11 @@ export default function Tasks() {
     // LOGOUT
     // ============================================================
 
-    // Remove o usuário do navegador e volta para a Home.
     function handleLogout() {
+        // Remove o usuário salvo no navegador.
         sessionStorage.removeItem('usuario');
 
+        // Volta para a página inicial.
         navigate('/');
     }
 
@@ -296,12 +338,18 @@ export default function Tasks() {
         return null;
     }
 
+    // ============================================================
+    // TELA
+    // ============================================================
+
     return (
         <div>
+
             <h1>Minhas tarefas</h1>
 
             <p>
-                Usuário logado: <strong>{usuario.username}</strong>
+                Usuário logado:{' '}
+                <strong>{usuario.username}</strong>
             </p>
 
             <button onClick={handleLogout}>
@@ -318,7 +366,7 @@ export default function Tasks() {
 
             <form onSubmit={handleCriarTask}>
 
-                {/* Campo para o título */}
+                {/* Campo do título */}
                 <input
                     type="text"
                     name="titulo"
@@ -329,7 +377,7 @@ export default function Tasks() {
 
                 <br />
 
-                {/* Campo para a descrição */}
+                {/* Campo da descrição */}
                 <textarea
                     name="descricao"
                     value={novaTask.descricao}
@@ -339,7 +387,7 @@ export default function Tasks() {
 
                 <br />
 
-                {/* Campo para a prioridade */}
+                {/* Campo da prioridade */}
                 <input
                     type="text"
                     name="prioridade"
@@ -350,7 +398,39 @@ export default function Tasks() {
 
                 <br />
 
-                {/* Ao clicar, o formulário chama handleCriarTask */}
+                {/* Data e hora de início */}
+                <label>
+                    Data e hora de início:
+                </label>
+
+                <br />
+
+                <input
+                    type="datetime-local"
+                    name="startAt"
+                    value={novaTask.startAt}
+                    onChange={handleNovaTaskChange}
+                />
+
+                <br />
+
+                {/* Data e hora de término */}
+                <label>
+                    Data e hora de término:
+                </label>
+
+                <br />
+
+                <input
+                    type="datetime-local"
+                    name="endAt"
+                    value={novaTask.endAt}
+                    onChange={handleNovaTaskChange}
+                />
+
+                <br />
+
+                {/* Envia o formulário */}
                 <button type="submit">
                     Criar tarefa
                 </button>
@@ -364,19 +444,26 @@ export default function Tasks() {
             ===================================================== */}
 
             {tasks.length === 0 ? (
+
                 <p>Você não possui tarefas.</p>
+
             ) : (
+
                 tasks.map((task) => (
+
                     <div key={task.id}>
 
                         {editandoId === task.id ? (
 
-                            // --------------------------------
+                            // =====================================
                             // MODO DE EDIÇÃO
-                            // --------------------------------
+                            // =====================================
+
                             <div>
+
                                 <h3>Editar tarefa</h3>
 
+                                {/* Título */}
                                 <input
                                     type="text"
                                     name="titulo"
@@ -387,6 +474,7 @@ export default function Tasks() {
 
                                 <br />
 
+                                {/* Descrição */}
                                 <textarea
                                     name="descricao"
                                     value={taskEditada.descricao}
@@ -396,12 +484,45 @@ export default function Tasks() {
 
                                 <br />
 
+                                {/* Prioridade */}
                                 <input
                                     type="text"
                                     name="prioridade"
                                     value={taskEditada.prioridade}
                                     onChange={handleChange}
                                     placeholder="Prioridade"
+                                />
+
+                                <br />
+
+                                {/* Data de início */}
+                                <label>
+                                    Data e hora de início:
+                                </label>
+
+                                <br />
+
+                                <input
+                                    type="datetime-local"
+                                    name="startAt"
+                                    value={taskEditada.startAt}
+                                    onChange={handleChange}
+                                />
+
+                                <br />
+
+                                {/* Data de término */}
+                                <label>
+                                    Data e hora de término:
+                                </label>
+
+                                <br />
+
+                                <input
+                                    type="datetime-local"
+                                    name="endAt"
+                                    value={taskEditada.endAt}
+                                    onChange={handleChange}
                                 />
 
                                 <br />
@@ -413,14 +534,17 @@ export default function Tasks() {
                                 <button onClick={handleCancelar}>
                                     Cancelar
                                 </button>
+
                             </div>
 
                         ) : (
 
-                            // --------------------------------
+                            // =====================================
                             // MODO NORMAL
-                            // --------------------------------
+                            // =====================================
+
                             <div>
+
                                 <h3>{task.titulo}</h3>
 
                                 <p>
@@ -431,11 +555,20 @@ export default function Tasks() {
                                     Prioridade: {task.priority}
                                 </p>
 
+                                <p>
+                                    Início: {task.startAt}
+                                </p>
+
+                                <p>
+                                    Término: {task.endAt}
+                                </p>
+
                                 <button
                                     onClick={() => handleEditar(task)}
                                 >
                                     Editar
                                 </button>
+
                             </div>
                         )}
 
@@ -444,6 +577,7 @@ export default function Tasks() {
                     </div>
                 ))
             )}
+
         </div>
     );
 }
