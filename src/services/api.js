@@ -1,9 +1,17 @@
 import axios from 'axios';
 
+// Verifica onde o frontend está sendo executado.
+//
+// Se estiver no nosso computador (localhost),
+// usamos o backend local.
+//
+// Se estiver publicado no Render,
+// usamos o backend publicado no Render.
+const baseURL =
+    window.location.hostname === 'localhost'
+        ? 'http://localhost:8080'
+        : 'https://curso-rocketseat.onrender.com';
+
 export const api = axios.create({
-  // Se estiver rodando o Java localmente:
-  baseURL: 'http://localhost:8080', 
-  
-  // Se o backend já estiver publicado no Render, use a URL do Render:
-  // baseURL: 'https://seu-app-spring.onrender.com'
+    baseURL: baseURL
 });
